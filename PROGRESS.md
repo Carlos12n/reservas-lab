@@ -143,6 +143,20 @@ reservas-lab/
   README como paso manual (borrar `data/reservas.db`) con su advertencia.
   La base de la prueba manual quedó en `data/` (ignorada por git).
 
+### Tarea 6 — README: secciones 2, 3 y 4 (2026-10-24)
+
+- **Qué se hizo:** se reemplazaron los textos "Pendiente" de las secciones 2
+  (solución), 3 (preparación del agente) y 4 (decisiones y delegación) del
+  README. La sección 1 no se modificó (verificado con `git diff`). Versión de
+  Claude Code y modelo tomados de la información de la sesión. Los ejemplos
+  de salida son los de la prueba manual de la tarea 5.
+- **Comandos ejecutados:** `python3 cli.py --help` (coincide con los
+  comandos documentados) y `python3 -m pytest -q`.
+- **Resultado real:** `80 passed in 0.69s`.
+- **Pendientes / decisiones:** quedan marcados con **[COMPLETAR]** en la
+  sección 4 los motivos de las decisiones humanas, que solo puede aportar el
+  humano.
+
 <!-- Plantilla para cada tarea:
 
 ### Tarea N — Título (AAAA-MM-DD)
