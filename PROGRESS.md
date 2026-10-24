@@ -114,6 +114,35 @@ reservas-lab/
   qué bloquea. Limitación: verificar e insertar no es atómico entre procesos;
   es suficiente para una CLI de un solo usuario a la vez.
 
+### Tarea 5 — `cli.py`: interfaz de consola (2026-10-24)
+
+- **Qué se hizo:** primero se escribió `tests/test_cli.py` y se lo corrió sin
+  implementación. Después se creó `cli.py` (argparse) con los comandos
+  `unidades`, `listar [--unidad]`, `disponibilidad`, `reservar` y
+  `cancelar ID`, y la opción global `--db` (por defecto `data/reservas.db`).
+  Los errores se muestran como `Error: ...` en stderr con código de salida 1.
+- **Requisitos cubiertos:** R1 a R9 desde la consola. R9 se prueba con
+  procesos separados (`subprocess`): cada comando es un arranque nuevo.
+- **Comando ejecutado (antes de implementar):** `python3 -m pytest`
+- **Resultado real:** `ModuleNotFoundError: No module named 'cli'` —
+  `1 error in 0.13s` (falla esperada).
+- **Comando ejecutado (después de implementar):** `python3 -m pytest`
+- **Resultado real:** `80 passed in 0.65s` (65 anteriores + 15 nuevas).
+- **Prueba manual sobre la base real (`data/reservas.db`):** se ejecutaron
+  `unidades` (5 unidades); `reservar` MIC-01 10:00-11:00 → `Reserva 1 creada`;
+  MIC-01 10:30-11:30 → `Error: MIC-01 ya está reservada en ese horario
+  (reserva 1)`, código 1; MIC-01 11:00-12:00 → `Reserva 2 creada`; MIC-02
+  10:00-11:00 → `Reserva 3 creada`; XYZ-99 → `Error: unidad desconocida:
+  XYZ-99`; `cancelar 1` → `[cancelada]`; `cancelar 1` otra vez → `Error: la
+  reserva 1 ya está cancelada`; `disponibilidad` MIC-01 10:00-11:00 →
+  `disponible`; 11:30-12:30 → `no disponible`, ocupada por #2. Cada comando
+  es un proceso nuevo y `listar` mostró las 3 reservas (#1 cancelada, #2 y #3
+  activas) después de todos ellos.
+- **Pendientes / decisiones:** no se agregó un comando para reiniciar datos,
+  porque `AGENTS.md` prohíbe borrar reservas. El reinicio se documentará en el
+  README como paso manual (borrar `data/reservas.db`) con su advertencia.
+  La base de la prueba manual quedó en `data/` (ignorada por git).
+
 <!-- Plantilla para cada tarea:
 
 ### Tarea N — Título (AAAA-MM-DD)
