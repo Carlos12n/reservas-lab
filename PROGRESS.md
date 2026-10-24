@@ -50,6 +50,23 @@ reservas-lab/
   formato exacto `YYYY-MM-DD HH:MM` con ceros a la izquierda (se rechaza
   `2026-1-2 10:00`). Una duración de exactamente 8 horas se acepta.
 
+### Tarea 2 — `inventario.py`: carga de `inventario.json` (2026-10-24)
+
+- **Qué se hizo:** primero se escribió `tests/test_inventario.py` y se lo
+  corrió sin implementación. Después se creó `inventario.py` con `Unidad` y
+  `cargar_inventario(ruta)`, que por defecto lee `inventario.json` junto al
+  módulo (no depende del directorio desde donde se ejecute).
+- **Requisitos cubiertos:** R1. Se verificó además que los IDs cargados sirven
+  para `validar_unidad` (unidad desconocida de R6).
+- **Comando ejecutado (antes de implementar):** `python3 -m pytest`
+- **Resultado real:** `ModuleNotFoundError: No module named 'inventario'` —
+  `1 error during collection` (falla esperada).
+- **Comando ejecutado (después de implementar):** `python3 -m pytest`
+- **Resultado real:** `32 passed in 0.06s` (28 de la tarea 1 + 4 nuevas).
+- **Pendientes / decisiones:** no se validan IDs duplicados ni campos
+  faltantes en el JSON, porque la administración del inventario está fuera de
+  alcance y el archivo es precargado.
+
 <!-- Plantilla para cada tarea:
 
 ### Tarea N — Título (AAAA-MM-DD)
