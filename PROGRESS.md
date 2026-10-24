@@ -167,6 +167,18 @@ reservas-lab/
 - **Comando ejecutado:** `python3 -m pytest -q`
 - **Resultado real:** `80 passed in 0.66s`.
 
+### Tarea 8 — Decisiones humanas en la sección 4 del README (2026-10-24)
+
+- **Qué se hizo:** se reemplazaron los **[COMPLETAR]** de la sección 4 con las
+  respuestas del humano a preguntas de opción múltiple: aceptó las tres
+  tareas sin revisar el código (confiando en las pruebas del agente), mantuvo
+  el formato estricto de fecha y el tope de 8 horas, los IDs numéricos sin
+  borrado y el reinicio manual sin comando. Se dejó registrada la limitación
+  de que no hubo revisión independiente.
+- **Comando ejecutado:** `python3 -m pytest -q`
+- **Resultado real:** `80 passed in 0.69s`. `grep -c COMPLETAR README.md`
+  devuelve 0.
+
 <!-- Plantilla para cada tarea:
 
 ### Tarea N — Título (AAAA-MM-DD)

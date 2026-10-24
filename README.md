@@ -268,9 +268,14 @@ agente (el contenedor de la sesión es temporal).
 | Errores separados: `ErrorValidacion` (entradas) y `ErrorReserva` (estado) | Distinguir entrada mal escrita de operación imposible | Un único tipo de error |
 | Una rama por tarea | Tener un enlace de evidencia por tarea | Todo en `main` |
 
-*Estas decisiones las propuso el agente y el humano las aceptó al pedir
-continuar. **[COMPLETAR por el humano: indicar si alguna se revisó o
-cambió, y por qué.]***
+Estas decisiones las propuso el agente. El humano aceptó cada tarea al pedir
+continuar, sin leer el código ni correr las pruebas en su máquina: confió en
+las pruebas que ejecutó el agente y en los resultados registrados en
+`PROGRESS.md`. Al cerrar el trabajo, el humano confirmó explícitamente las
+decisiones de los tres episodios (abajo) y no cambió ninguna.
+
+**Limitación reconocida:** la validación humana se basó en la evidencia
+producida por el agente y no en una revisión independiente del código.
 
 ### Episodios de delegación
 
@@ -284,8 +289,10 @@ cambió, y por qué.]***
 - **Resultado del agente:** pruebas escritas primero (falla real
   registrada), después `dominio.py`: 28 pruebas pasan. Además propuso el
   formato estricto de fecha y aceptar exactamente 8 horas.
-- **Decisión humana y motivo:** **[COMPLETAR: aceptado / modificado /
-  rechazado, y por qué.]**
+- **Decisión humana y motivo:** aceptado sin cambios. El formato estricto y
+  el tope de exactamente 8 horas siguen al pie de la letra la especificación
+  (formato `YYYY-MM-DD HH:MM` y "duración máxima de 8 horas"). La tarea se
+  aceptó confiando en las pruebas del agente, sin revisión propia del código.
 - **Evidencia:** commit
   [784c3bf](https://github.com/Carlos12n/reservas-lab/commit/784c3bf7acc592700af661ea5160799018db59a4),
   `PROGRESS.md` (tarea 1).
@@ -299,7 +306,11 @@ cambió, y por qué.]***
   como texto, restricción `CHECK` de estados y ninguna operación de borrado
   (verificado por una prueba). R9 probado reabriendo el archivo con una
   instancia nueva: 41 pruebas pasan, sin tocar la base real.
-- **Decisión humana y motivo:** **[COMPLETAR.]**
+- **Decisión humana y motivo:** aceptado sin cambios. Los IDs numéricos son
+  cortos y fáciles de escribir en la consola (`cancelar 1`), y no tener
+  operación de borrado cumple el requisito de conservar el historial. La tarea
+  se aceptó confiando en las pruebas del agente, sin revisión propia del
+  código.
 - **Evidencia:** commit
   [4794a54](https://github.com/Carlos12n/reservas-lab/commit/4794a549201560e1bcaa5061135d1f1be158c0f1),
   `PROGRESS.md` (tarea 3).
@@ -314,8 +325,11 @@ cambió, y por qué.]***
   separados y prueba manual sobre la base real: 80 pruebas pasan. El agente
   **no** implementó `reiniciar`, porque entraba en conflicto con la regla
   "nunca borrar reservas", y propuso documentarlo como paso manual.
-- **Decisión humana y motivo:** **[COMPLETAR: si se acepta el reinicio
-  manual o se pide el comando, y por qué.]**
+- **Decisión humana y motivo:** se acepta el reinicio manual y no se agrega
+  el comando. Un comando que borra todas las reservas contradice la regla
+  "nunca borrar reservas" de `AGENTS.md`, y la especificación no lo pide.
+  Este fue el único punto en que el agente se apartó del plan inicial, y lo
+  señaló antes de que el humano tuviera que detectarlo.
 - **Evidencia:** commit
   [4e50250](https://github.com/Carlos12n/reservas-lab/commit/4e50250270edb82d598623038bd797644a488ee9),
   `PROGRESS.md` (tarea 5).
