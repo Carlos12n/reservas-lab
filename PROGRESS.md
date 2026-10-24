@@ -67,6 +67,29 @@ reservas-lab/
   faltantes en el JSON, porque la administración del inventario está fuera de
   alcance y el archivo es precargado.
 
+### Tarea 3 — `repositorio.py`: persistencia SQLite (2026-10-24)
+
+- **Qué se hizo:** primero se escribió `tests/test_repositorio.py` y se lo
+  corrió sin implementación. Después se creó `repositorio.py` con la clase
+  `Repositorio` (por defecto `data/reservas.db`, crea la carpeta si falta):
+  `guardar_nueva`, `obtener`, `listar` (filtro opcional por unidad, orden por
+  inicio) y `cambiar_estado`. No existe ninguna operación de borrado.
+- **Requisitos cubiertos:** R9 (activas y canceladas siguen presentes al
+  reabrir el archivo con una instancia nueva), base de R2 (ID único,
+  estado `activa`) y de R7 (cambiar estado conserva ID y datos).
+- **Comando ejecutado (antes de implementar):** `python3 -m pytest`
+- **Resultado real:** `ModuleNotFoundError: No module named 'repositorio'` —
+  `1 error in 0.11s` (falla esperada).
+- **Comando ejecutado (después de implementar):** `python3 -m pytest`
+- **Resultado real:** `41 passed in 0.09s` (32 anteriores + 9 nuevas).
+  Las pruebas usan una base temporal (`tmp_path`); se comprobó con `ls data`
+  que no se creó la base real.
+- **Pendientes / decisiones:** ID autoincremental de SQLite (fácil de escribir
+  en consola). Fechas guardadas como texto `YYYY-MM-DD HH:MM`, que ordena
+  cronológicamente. Una restricción `CHECK` impide estados distintos de
+  `activa` y `cancelada`. La regla de superposición no está en SQL: sigue
+  siendo solo la de `dominio.py`, que se aplicará en el servicio (tarea 4).
+
 <!-- Plantilla para cada tarea:
 
 ### Tarea N — Título (AAAA-MM-DD)
