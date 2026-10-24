@@ -63,24 +63,273 @@ Cada ID identifica una unidad física distinta.
   cancelación que conserva el registro y libera el horario.
 - La persistencia se comprueba tras detener y reiniciar sin borrar datos.
 
+
 ## 2. Solución
 
-*Pendiente: se completa cuando exista el código. Incluir estructura, decisiones
-técnicas, requisitos previos y versiones, instalación, carga inicial y reinicio
-de datos, comandos de aplicación y pruebas, ejemplo de entrada y salida, dónde
-persisten los datos, advertencia sobre borrado en el reinicio, pendientes y
-limitaciones.*
+### Estructura
+```
+reservas-lab/
+├── dominio.py         # única regla de superposición y validaciones (R3-R6, R8)
+├── inventario.py      # carga de inventario.json (R1)
+├── repositorio.py     # persistencia SQLite, sin borrado (R9)
+├── servicio.py        # reservar, cancelar, disponibilidad (R2, R7, R8)
+├── cli.py             # interfaz de consola
+├── inventario.json    # inventario precargado
+├── pyproject.toml     # configuración de pytest
+├── tests/             # pruebas automáticas (80)
+├── AGENTS.md          # instrucciones para el agente
+├── PROGRESS.md        # registro de tareas, comandos y resultados reales
+└── data/reservas.db   # base de datos (se crea sola, ignorada por git)
+```
+
+Las capas dependen solo hacia abajo: `cli` → `servicio` → `dominio`,
+`inventario`, `repositorio`. La regla de superposición vive únicamente en
+`dominio.se_superponen`; `servicio` la usa a través de `dominio.conflictos`
+tanto para reservar como para consultar disponibilidad (R8).
+
+### Decisiones técnicas
+- Python con solo librería estándar (`argparse`, `sqlite3`, `json`,
+  `datetime`); pytest únicamente para pruebas.
+- SQLite en un archivo local: persistencia sin instalar un servidor.
+- Las reservas nunca se borran: no existe operación de borrado; cancelar
+  cambia el estado a `cancelada`.
+- Más detalle, motivos y alternativas en la sección 4.
+
+### Requisitos previos
+- Python 3.11 o más nuevo (probado con Python 3.13.17).
+- pytest para correr las pruebas (probado con pytest 9.1.1).
+
+### Instalación
+```bash
+git clone https://github.com/Carlos12n/reservas-lab
+cd reservas-lab
+python3 -m venv .venv
+source .venv/bin/activate      # en Windows: .venv\Scripts\activate
+pip install pytest             # solo para las pruebas
+```
+La aplicación no necesita dependencias externas.
+
+### Carga inicial y reinicio de datos
+- **Inventario:** se lee de `inventario.json` en cada ejecución. No hay que
+  importarlo.
+- **Base de datos:** el primer comando crea `data/reservas.db` con la tabla
+  vacía.
+- **Reiniciar los datos:** borrar el archivo a mano (`rm data/reservas.db`).
+  El próximo comando crea una base vacía.
+
+> ⚠️ **Advertencia:** borrar `data/reservas.db` elimina **todas** las
+> reservas, activas y canceladas, y no se puede deshacer. La aplicación no
+> ofrece un comando para hacerlo, a propósito, porque las reservas nunca
+> deben borrarse durante el uso normal.
+
+### Comandos
+```bash
+python3 cli.py unidades
+python3 cli.py listar [--unidad MIC-01]
+python3 cli.py disponibilidad --unidad MIC-01 --inicio "2026-11-02 10:00" --fin "2026-11-02 11:00"
+python3 cli.py reservar --unidad MIC-01 --solicitante "Ana Ficticia" --inicio "2026-11-02 10:00" --fin "2026-11-02 11:00"
+python3 cli.py cancelar 1
+python3 cli.py --help
+```
+- Fecha y hora en formato `YYYY-MM-DD HH:MM`, entre comillas por el espacio.
+- La opción global `--db RUTA` usa otro archivo de base (por ejemplo, para
+  probar sin tocar `data/reservas.db`): `python3 cli.py --db /tmp/prueba.db listar`.
+- Ante un error, se muestra `Error: ...` y el código de salida es 1.
+
+### Pruebas
+```bash
+python3 -m pytest
+```
+Resultado obtenido: `80 passed`. Las pruebas usan bases temporales y no
+tocan `data/reservas.db`. Cubren creación válida, superposición, límites
+consecutivos (10:00-11:00 contra 11:00-12:00), unidades distintas
+simultáneas, entradas inválidas, cancelación que conserva y libera, y
+persistencia entre procesos distintos.
+
+### Ejemplo de entrada y salida
+Salida real de la prueba manual (ver `PROGRESS.md`, tarea 5):
+```text
+$ python3 cli.py reservar --unidad MIC-01 --solicitante "Ana Ficticia" --inicio "2026-11-02 10:00" --fin "2026-11-02 11:00"
+Reserva 1 creada: #1  MIC-01  2026-11-02 10:00 -> 2026-11-02 11:00  Ana Ficticia  [activa]
+
+$ python3 cli.py reservar --unidad MIC-01 --solicitante "Beto Ficticio" --inicio "2026-11-02 10:30" --fin "2026-11-02 11:30"
+Error: MIC-01 ya está reservada en ese horario (reserva 1)
+
+$ python3 cli.py reservar --unidad MIC-01 --solicitante "Beto Ficticio" --inicio "2026-11-02 11:00" --fin "2026-11-02 12:00"
+Reserva 2 creada: #2  MIC-01  2026-11-02 11:00 -> 2026-11-02 12:00  Beto Ficticio  [activa]
+
+$ python3 cli.py cancelar 1
+Reserva 1 cancelada: #1  MIC-01  2026-11-02 10:00 -> 2026-11-02 11:00  Ana Ficticia  [cancelada]
+
+$ python3 cli.py cancelar 1
+Error: la reserva 1 ya está cancelada
+
+$ python3 cli.py disponibilidad --unidad MIC-01 --inicio "2026-11-02 11:30" --fin "2026-11-02 12:30"
+MIC-01 no disponible de 2026-11-02 11:30 a 2026-11-02 12:30. Ocupada por:
+  #2  MIC-01  2026-11-02 11:00 -> 2026-11-02 12:00  Beto Ficticio  [activa]
+```
+
+### Dónde persisten los datos
+En `data/reservas.db` (SQLite), tabla `reservas` con `id`, `unidad`,
+`solicitante`, `inicio`, `fin` y `estado`. La carpeta `data/` está en
+`.gitignore`: los datos no se suben al repositorio.
+
+### Pendientes y limitaciones
+- Se permiten fechas pasadas (supuesto declarado en la sección 1).
+- Verificar disponibilidad e insertar no es atómico entre procesos: dos
+  reservas lanzadas exactamente a la vez podrían superponerse. Alcanza para
+  una CLI usada por una persona a la vez.
+- No se validan IDs duplicados ni campos faltantes en `inventario.json`
+  (administrar el inventario está fuera de alcance).
+- Las horas se interpretan como locales de Buenos Aires, sin guardar offset.
 
 ## 3. Preparación del agente
 
-*Pendiente: se completa con evidencia real. Incluir entorno, versión y modelo
-(o indicar "no visible"), instrucciones usadas (ver `AGENTS.md`), contexto
-suministrado y excluido, permisos y aprobaciones, la adaptación específica con
-evidencia de uso, y cómo se conserva el progreso (ver `PROGRESS.md`).*
+### Entorno, versión y modelo
+- **Herramienta:** Claude Code en la web (claude.ai/code), sesión en un
+  contenedor en la nube con el repositorio clonado.
+- **Versión de Claude Code:** 2.1.310 (informada por la sesión).
+- **Modelo:** `claude-opus-5-5` (configurado y efectivamente usado, según la
+  información de la sesión).
+- **Modo de permisos de la sesión:** automático.
+- **Entorno de ejecución:** Linux, Python 3.13.17, pytest 9.1.1.
+
+### Instrucciones usadas
+`AGENTS.md` define objetivo, reglas del proyecto, flujo de trabajo, permisos y
+fuera de alcance. Claude Code no carga `AGENTS.md` de forma automática (su
+archivo nativo es `CLAUDE.md`): en esta sesión el agente lo leyó al revisar el
+repositorio al inicio y siguió sus reglas desde entonces. Para que no dependa
+de eso, se agregó `CLAUDE.md` con la línea `@AGENTS.md`, que hace que Claude
+Code importe `AGENTS.md` automáticamente en cada sesión nueva.
+
+### Contexto suministrado y excluido
+- **Suministrado:** el repositorio completo (`README.md` con la
+  especificación, `AGENTS.md`, `inventario.json`) y los pedidos del humano
+  en el chat, en su mayoría breves ("seguir") sobre un plan acordado al
+  inicio.
+- **Excluido:** datos reales de personas (solo solicitantes ficticios),
+  secretos y tokens, y cualquier sistema fuera del repositorio.
+
+### Permisos y aprobaciones
+Según `AGENTS.md`, instalar dependencias, borrar archivos y hacer commit o
+push requieren aprobación humana. Lo que ocurrió:
+
+| Acción | Aprobación |
+|---|---|
+| Instalar pytest | Aprobada al pedir "arrancar con el paso 0". |
+| Commit y push del paso 0 | Aprobados ("doy acceso"). El push falló con 403 hasta que el humano instaló la Claude GitHub App en el repositorio. |
+| Borrar una copia de solo lectura del repo en el contenedor | Aprobado explícitamente ("sí, borrar"). |
+| Commits y pushes de las tareas 1 a 6 | El agente los hizo sin pedir aprobación por cada uno, extendiendo la del paso 0; lo informó al humano después de la tarea 1. Fue un desvío respecto de la versión original de `AGENTS.md`. |
+
+Al revisar este desvío, el humano decidió cambiar la regla, porque reflejaba
+cómo se trabajó en la práctica: `AGENTS.md` ahora permite commit y push a la
+rama de la tarea al terminarla con las pruebas pasando, y sigue exigiendo
+aprobación para fusionar o hacer push a `main`.
+
+Un hook de la sesión (`stop-hook-git-check.sh`) pedía commitear y pushear al
+terminar cada turno; el agente no lo tomó como aprobación y esperó la del
+humano para el primer commit.
+
+### Adaptación específica y evidencia de uso
+La adaptación es el flujo de `AGENTS.md`:
+
+1. **Prueba que falla antes del código.** En cada tarea se escribió primero
+   el archivo de pruebas y se lo corrió sin implementación. `PROGRESS.md`
+   registra cada falla real (por ejemplo `ModuleNotFoundError: No module
+   named 'dominio'`) y después el resultado real al implementar.
+2. **Caso consecutivo obligatorio.** Las pruebas de superposición incluyen
+   10:00-11:00 contra 11:00-12:00:
+   `test_r4_turnos_consecutivos_no_se_superponen` en
+   `tests/test_dominio.py`, `test_r4_turno_consecutivo_se_acepta` en
+   `tests/test_servicio.py` y en `tests/test_cli.py`.
+3. **`PROGRESS.md` al terminar cada tarea**, con comando y resultado real.
+4. **Tareas chicas:** una rama y un commit por tarea (`paso-0`,
+   `tarea-1` … `tarea-6`).
+
+### Cómo se conserva el progreso
+`PROGRESS.md` es el registro persistente: qué se hizo en cada tarea, el
+comando ejecutado y el resultado real. Junto con el historial de commits,
+permite retomar el trabajo en una sesión nueva sin depender de la memoria del
+agente (el contenedor de la sesión es temporal).
 
 ## 4. Registro de decisiones y delegación
 
-*Pendiente: se completa a medida que ocurran los hechos. Incluir decisiones
-significativas con motivos y alternativas, y tres episodios de delegación
-(objetivo y requisito, contexto e instrucción, resultado del agente, decisión
-humana con motivo, enlace a evidencia).*
+### Decisiones significativas
+| Decisión | Motivo | Alternativas descartadas |
+|---|---|---|
+| Separar `dominio`, `inventario`, `repositorio`, `servicio` y `cli` | Probar cada regla por separado y tener una sola función de superposición (R8) | Todo en un solo archivo |
+| ID de reserva autoincremental de SQLite | Fácil de escribir en la consola (`cancelar 1`) | UUID |
+| Fechas guardadas como texto `YYYY-MM-DD HH:MM` | Coincide con el formato de entrada y ordena cronológicamente | Timestamps numéricos |
+| Formato de fecha estricto (rechaza `2026-1-2 10:00`) | Un solo formato, como fija la especificación | Aceptar variantes sin ceros |
+| Duración de exactamente 8 horas permitida | La spec dice "máximo 8 horas" | Exigir menos de 8 horas |
+| La superposición no se replica en SQL | `AGENTS.md` exige una única función en `dominio.py` | Restricción o consulta SQL de solapamiento |
+| `disponibilidad` devuelve las reservas que bloquean | Mostrar con qué choca, no solo sí/no | Devolver solo un booleano |
+| Sin comando `reiniciar` | `AGENTS.md` prohíbe borrar reservas; el reinicio queda como paso manual documentado | Comando con confirmación |
+| Errores separados: `ErrorValidacion` (entradas) y `ErrorReserva` (estado) | Distinguir entrada mal escrita de operación imposible | Un único tipo de error |
+| Una rama por tarea | Tener un enlace de evidencia por tarea | Todo en `main` |
+
+Estas decisiones las propuso el agente. El humano aceptó cada tarea al pedir
+continuar, sin leer el código ni correr las pruebas en su máquina: confió en
+las pruebas que ejecutó el agente y en los resultados registrados en
+`PROGRESS.md`. Al cerrar el trabajo, el humano confirmó explícitamente las
+decisiones de los tres episodios (abajo) y no cambió ninguna.
+
+**Limitación reconocida:** la validación humana se basó en la evidencia
+producida por el agente y no en una revisión independiente del código.
+
+### Episodios de delegación
+
+#### Episodio 1 — Regla de superposición y validaciones (tarea 1)
+- **Objetivo y requisito:** implementar la única función de superposición y
+  las validaciones de entrada (R3, R4, R5, R6, R8).
+- **Contexto e instrucción:** el humano aprobó el plan inicial y pidió
+  "seguir con tarea 1". El agente tenía la sección 1 del README y
+  `AGENTS.md` (regla exacta de superposición, prueba primero, caso
+  10:00-11:00 contra 11:00-12:00).
+- **Resultado del agente:** pruebas escritas primero (falla real
+  registrada), después `dominio.py`: 28 pruebas pasan. Además propuso el
+  formato estricto de fecha y aceptar exactamente 8 horas.
+- **Decisión humana y motivo:** aceptado sin cambios. El formato estricto y
+  el tope de exactamente 8 horas siguen al pie de la letra la especificación
+  (formato `YYYY-MM-DD HH:MM` y "duración máxima de 8 horas"). La tarea se
+  aceptó confiando en las pruebas del agente, sin revisión propia del código.
+- **Evidencia:** commit
+  [784c3bf](https://github.com/Carlos12n/reservas-lab/commit/784c3bf7acc592700af661ea5160799018db59a4),
+  `PROGRESS.md` (tarea 1).
+
+#### Episodio 2 — Persistencia en SQLite (tarea 3)
+- **Objetivo y requisito:** guardar reservas y estados para recuperarlos al
+  reiniciar (R9), sin operación de borrado.
+- **Contexto e instrucción:** el humano pidió "seguir". `AGENTS.md` fija
+  SQLite en `data/reservas.db` y prohíbe borrar reservas.
+- **Resultado del agente:** `repositorio.py` con ID autoincremental, fechas
+  como texto, restricción `CHECK` de estados y ninguna operación de borrado
+  (verificado por una prueba). R9 probado reabriendo el archivo con una
+  instancia nueva: 41 pruebas pasan, sin tocar la base real.
+- **Decisión humana y motivo:** aceptado sin cambios. Los IDs numéricos son
+  cortos y fáciles de escribir en la consola (`cancelar 1`), y no tener
+  operación de borrado cumple el requisito de conservar el historial. La tarea
+  se aceptó confiando en las pruebas del agente, sin revisión propia del
+  código.
+- **Evidencia:** commit
+  [4794a54](https://github.com/Carlos12n/reservas-lab/commit/4794a549201560e1bcaa5061135d1f1be158c0f1),
+  `PROGRESS.md` (tarea 3).
+
+#### Episodio 3 — Interfaz de consola y reinicio de datos (tarea 5)
+- **Objetivo y requisito:** exponer todo por consola (interfaz CLI de los
+  supuestos) y comprobar la persistencia al detener y reiniciar.
+- **Contexto e instrucción:** el plan inicial incluía un comando
+  `reiniciar`; el humano pidió "seguir".
+- **Resultado del agente:** `cli.py` con `unidades`, `listar`,
+  `disponibilidad`, `reservar` y `cancelar`; prueba de R9 con procesos
+  separados y prueba manual sobre la base real: 80 pruebas pasan. El agente
+  **no** implementó `reiniciar`, porque entraba en conflicto con la regla
+  "nunca borrar reservas", y propuso documentarlo como paso manual.
+- **Decisión humana y motivo:** se acepta el reinicio manual y no se agrega
+  el comando. Un comando que borra todas las reservas contradice la regla
+  "nunca borrar reservas" de `AGENTS.md`, y la especificación no lo pide.
+  Este fue el único punto en que el agente se apartó del plan inicial, y lo
+  señaló antes de que el humano tuviera que detectarlo.
+- **Evidencia:** commit
+  [4e50250](https://github.com/Carlos12n/reservas-lab/commit/4e50250270edb82d598623038bd797644a488ee9),
+  `PROGRESS.md` (tarea 5).

@@ -25,8 +25,10 @@ sección 1 de `README.md`. No agregar requisitos que no estén ahí.
 
 ## Permisos
 - Permitido: leer y editar archivos del repositorio, ejecutar pytest y la CLI.
+- Permitido: al terminar una tarea con todas las pruebas pasando, hacer
+  commit y push a la rama de esa tarea (nunca a `main`).
 - Requiere aprobación humana: instalar dependencias, borrar archivos,
-  ejecutar git commit o push, tocar archivos fuera del repositorio.
+  fusionar o hacer push a `main`, tocar archivos fuera del repositorio.
 
 ## Fuera de alcance
 Autenticación, pagos, notificaciones, integraciones externas, interfaz gráfica.
