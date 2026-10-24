@@ -157,6 +157,16 @@ reservas-lab/
   sección 4 los motivos de las decisiones humanas, que solo puede aportar el
   humano.
 
+### Tarea 7 — Ajustes de instrucciones del agente (2026-10-24)
+
+- **Qué se hizo:** a pedido del humano, `AGENTS.md` ahora permite commit y
+  push a la rama de la tarea al terminarla con pruebas pasando (fusionar o
+  hacer push a `main` sigue requiriendo aprobación). Se agregó `CLAUDE.md`
+  con `@AGENTS.md` para que Claude Code cargue las instrucciones solo. Se
+  actualizó la sección 3 del README con ambos cambios.
+- **Comando ejecutado:** `python3 -m pytest -q`
+- **Resultado real:** `80 passed in 0.66s`.
+
 <!-- Plantilla para cada tarea:
 
 ### Tarea N — Título (AAAA-MM-DD)
