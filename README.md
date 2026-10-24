@@ -185,72 +185,157 @@ En `data/reservas.db` (SQLite), tabla `reservas` con `id`, `unidad`,
 
 ## 3. Preparación del agente
 
-### Entorno, versión y modelo
-- **Herramienta:** Claude Code en la web (claude.ai/code), sesión en un
-  contenedor en la nube con el repositorio clonado.
-- **Versión de Claude Code:** 2.1.310 (informada por la sesión).
-- **Modelo:** `claude-opus-5-5` (configurado y efectivamente usado, según la
-  información de la sesión).
-- **Modo de permisos de la sesión:** automático.
-- **Entorno de ejecución:** Linux, Python 3.13.17, pytest 9.1.1.
+Los enlaces de esta sección apuntan al commit `0914d0b` de `main` (la fusión
+de la pull request [#1](https://github.com/Carlos12n/reservas-lab/pull/1)),
+para que la evidencia no cambie aunque el repositorio siga avanzando.
 
-### Instrucciones usadas
-`AGENTS.md` define objetivo, reglas del proyecto, flujo de trabajo, permisos y
-fuera de alcance. Claude Code no carga `AGENTS.md` de forma automática (su
-archivo nativo es `CLAUDE.md`): en esta sesión el agente lo leyó al revisar el
-repositorio al inicio y siguió sus reglas desde entonces. Para que no dependa
-de eso, se agregó `CLAUDE.md` con la línea `@AGENTS.md`, que hace que Claude
-Code importe `AGENTS.md` automáticamente en cada sesión nueva.
+### Entorno, versión y modelo
+
+| Dato | Valor | Fuente |
+|---|---|---|
+| Herramienta | Claude Code en la web (claude.ai/code), sesión remota en un contenedor Linux temporal con el repositorio clonado | Información de la sesión |
+| Versión de Claude Code | 2.1.310 | Información de la sesión |
+| Identificador del modelo | `claude-opus-5-5`, configurado y efectivamente usado en los turnos | Información de la sesión (modelo configurado y último modelo servido) |
+| Nivel de esfuerzo | `medium` | Información de la sesión |
+| Modo de permisos | Automático: un clasificador decide qué acciones pasan sin preguntar | Información de la sesión |
+| Entorno de ejecución | Linux, Python 3.13.17, pytest 9.1.1 | `python3 --version`, `python3 -m pytest --version` |
+| Instrucciones de sistema completas, temperatura y otros parámetros internos | **No visibles** | — |
+
+- **Función del modelo:** agente de implementación. Propuso el plan, escribió
+  primero las pruebas y después el código, ejecutó pytest y la CLI, redactó la
+  documentación y manejó git (ramas, commits, push y pull request). El humano
+  aprobó acciones, eligió entre alternativas y decidió la fusión.
+- **Motivo de la elección:** el humano eligió este modelo por ser el más
+  capaz disponible para programar y documentar.
+
+### Instrucciones y configuraciones usadas
+
+**En el repositorio (versionadas):**
+- [`AGENTS.md`](https://github.com/Carlos12n/reservas-lab/blob/0914d0b05b989615d493b7ebd4d9f045fa5b88b4/AGENTS.md):
+  objetivo, reglas del proyecto, flujo de trabajo, permisos y fuera de alcance.
+  Versión original en el commit
+  [75ef833](https://github.com/Carlos12n/reservas-lab/blob/75ef833fb8c54f18be5bcff158dd7b33ce7633f4/AGENTS.md);
+  la regla de commits se modificó en
+  [f0f7406](https://github.com/Carlos12n/reservas-lab/commit/f0f7406) (ver
+  "Herramientas y aprobaciones").
+- [`CLAUDE.md`](https://github.com/Carlos12n/reservas-lab/blob/0914d0b05b989615d493b7ebd4d9f045fa5b88b4/CLAUDE.md):
+  una sola línea, `@AGENTS.md`. Claude Code lee `CLAUDE.md` en forma nativa,
+  pero no `AGENTS.md`. Durante esta sesión el agente leyó `AGENTS.md` al revisar
+  el repositorio al inicio. Con `CLAUDE.md`, las sesiones nuevas lo importan
+  solas.
+- `pyproject.toml`: configuración de pytest (`pythonpath` y `testpaths`).
+- `.gitignore`: excluye `data/` (la base real) y las cachés de Python.
+
+**Externas al repositorio (extractos saneados):**
+
+1. *Hook de cierre de turno del entorno* (`~/.claude/stop-hook-git-check.sh`,
+   provisto por el entorno de Claude Code en la web). Al terminar cada turno
+   revisa si quedaron cambios sin commitear o sin subir y le pide al agente que
+   los suba:
+   ```bash
+   if ! git diff --quiet || ! git diff --cached --quiet; then
+     echo "There are uncommitted changes in the repository. Please commit and push these changes to the remote branch." >&2
+     exit 2
+   fi
+   ```
+   *Cómo se aplicó:* el agente lo tomó como un recordatorio y no como una
+   aprobación humana. En el paso 0 no hizo commit hasta que el humano lo
+   aprobó.
+2. *Clasificador del modo de permisos automático.* Bloqueó el commit que
+   modificaba `AGENTS.md` y creaba `CLAUDE.md`:
+   > Permission for this action was denied by the Claude Code auto mode
+   > classifier. Reason: [Self-Modification].
+
+   *Cómo se aplicó:* el agente no intentó esquivar el bloqueo. Le explicó al
+   humano qué estaba bloqueado y por qué, y esperó su aprobación explícita
+   ("opción 1") antes de reintentar.
+3. *Acceso a GitHub.* El primer push falló con `403` porque Claude no tenía
+   acceso al repositorio. El humano instaló la Claude GitHub App y desde
+   entonces los push funcionaron. No se guardaron tokens ni credenciales en el
+   repositorio.
 
 ### Contexto suministrado y excluido
 - **Suministrado:** el repositorio completo (`README.md` con la
-  especificación, `AGENTS.md`, `inventario.json`) y los pedidos del humano
-  en el chat, en su mayoría breves ("seguir") sobre un plan acordado al
-  inicio.
+  especificación, `AGENTS.md`, `inventario.json`) y los pedidos del humano en
+  el chat. La mayoría fueron breves ("seguir") sobre un plan de tareas acordado
+  al inicio, más respuestas a preguntas de opción múltiple del agente.
 - **Excluido:** datos reales de personas (solo solicitantes ficticios),
-  secretos y tokens, y cualquier sistema fuera del repositorio.
+  secretos y tokens, la base real `data/reservas.db` (ignorada por git; las
+  pruebas usan bases temporales), otros repositorios y cualquier sistema
+  externo.
 
-### Permisos y aprobaciones
-Según `AGENTS.md`, instalar dependencias, borrar archivos y hacer commit o
-push requieren aprobación humana. Lo que ocurrió:
+### Herramientas y aprobaciones
+**Herramientas que usó el agente:** terminal (git, pytest, la CLI),
+lectura y edición de archivos del repositorio, la API de GitHub (para crear
+y fusionar la pull request) y preguntas de opción múltiple al humano.
 
-| Acción | Aprobación |
-|---|---|
-| Instalar pytest | Aprobada al pedir "arrancar con el paso 0". |
-| Commit y push del paso 0 | Aprobados ("doy acceso"). El push falló con 403 hasta que el humano instaló la Claude GitHub App en el repositorio. |
-| Borrar una copia de solo lectura del repo en el contenedor | Aprobado explícitamente ("sí, borrar"). |
-| Commits y pushes de las tareas 1 a 6 | El agente los hizo sin pedir aprobación por cada uno, extendiendo la del paso 0; lo informó al humano después de la tarea 1. Fue un desvío respecto de la versión original de `AGENTS.md`. |
+| Acción | Control previsto en `AGENTS.md` | Qué se aplicó |
+|---|---|---|
+| Leer y editar archivos, ejecutar pytest y la CLI | Permitido | Se hizo libremente |
+| Instalar pytest | Requiere aprobación | Aprobado al pedir "arrancar con el paso 0" |
+| Borrar archivos | Requiere aprobación | Una copia vieja del repositorio en el contenedor se borró con aprobación ("sí, borrar"). No se borraron archivos del proyecto |
+| Commit y push | Versión original: requiere aprobación | Paso 0: aprobado. Tareas 1 a 6: el agente los hizo sin pedir aprobación por cada uno y lo informó después de la tarea 1. **Fue un desvío** |
+| Cambiar las instrucciones del agente | — | Bloqueado por el clasificador hasta la aprobación explícita del humano |
+| Fusionar en `main` | Requiere aprobación (versión actual) | El humano lo pidió explícitamente ("fusiona la pull request") |
 
-Al revisar este desvío, el humano decidió cambiar la regla, porque reflejaba
-cómo se trabajó en la práctica: `AGENTS.md` ahora permite commit y push a la
-rama de la tarea al terminarla con las pruebas pasando, y sigue exigiendo
-aprobación para fusionar o hacer push a `main`.
+Al revisar el desvío de los commits, el humano decidió cambiar la regla,
+porque reflejaba cómo se había trabajado en la práctica. Desde
+[f0f7406](https://github.com/Carlos12n/reservas-lab/commit/f0f7406),
+`AGENTS.md` permite commit y push a la rama de una tarea cuando termina con
+todas las pruebas pasando, y sigue exigiendo aprobación para fusionar o hacer
+push a `main`.
 
-Un hook de la sesión (`stop-hook-git-check.sh`) pedía commitear y pushear al
-terminar cada turno; el agente no lo tomó como aprobación y esperó la del
-humano para el primer commit.
+### Qué se revisó antes de aceptar
+- **El humano:** en cada tarea leyó el resumen del agente, que incluía la
+  salida real de pytest, y aceptó pidiendo continuar. **No leyó el código ni
+  ejecutó las pruebas en su máquina** (declarado también en la sección 4). Al
+  cerrar, revisó y confirmó las decisiones de los tres episodios respondiendo
+  preguntas concretas.
+- **Controles del agente antes de entregar cada resultado:**
+  - pytest antes de implementar (falla esperada) y después (todas pasan), en
+    cada tarea;
+  - `ls data` para confirmar que las pruebas no creaban la base real;
+  - una prueba manual de la CLI sobre la base real, con cada comando como
+    proceso nuevo (tarea 5);
+  - `git diff` para confirmar que la sección 1 del README no se modificó;
+  - `grep -c COMPLETAR README.md` igual a 0 antes de pedir la fusión;
+  - estado `mergeable: clean` de la pull request y `80 passed` sobre `main`
+    después de fusionar.
 
-### Adaptación específica y evidencia de uso
-La adaptación es el flujo de `AGENTS.md`:
+### Adaptaciones específicas y evidencia de uso
+1. **Turnos consecutivos** (`AGENTS.md`, flujo, punto 2: "toda prueba de
+   superposición debe incluir el caso 10:00-11:00 contra 11:00-12:00").
+   Está presente en cada capa:
+   [`tests/test_dominio.py:51`](https://github.com/Carlos12n/reservas-lab/blob/0914d0b05b989615d493b7ebd4d9f045fa5b88b4/tests/test_dominio.py#L51),
+   [`tests/test_servicio.py:60`](https://github.com/Carlos12n/reservas-lab/blob/0914d0b05b989615d493b7ebd4d9f045fa5b88b4/tests/test_servicio.py#L60),
+   [`tests/test_cli.py:55`](https://github.com/Carlos12n/reservas-lab/blob/0914d0b05b989615d493b7ebd4d9f045fa5b88b4/tests/test_cli.py#L55).
+   En la prueba manual (`PROGRESS.md`, tarea 5), la reserva de MIC-01 de
+   11:00 a 12:00 se aceptó después de la de 10:00 a 11:00.
+2. **Una única función de superposición** (`AGENTS.md`, reglas). Es
+   [`dominio.se_superponen`](https://github.com/Carlos12n/reservas-lab/blob/0914d0b05b989615d493b7ebd4d9f045fa5b88b4/dominio.py#L39).
+   Una prueba con un espía verifica que reservar y consultar disponibilidad la
+   usan:
+   [`tests/test_servicio.py:153`](https://github.com/Carlos12n/reservas-lab/blob/0914d0b05b989615d493b7ebd4d9f045fa5b88b4/tests/test_servicio.py#L153).
+3. **Procedimiento de persistencia.** R9 se prueba reabriendo el mismo
+   archivo con una instancia nueva
+   ([`tests/test_repositorio.py:78`](https://github.com/Carlos12n/reservas-lab/blob/0914d0b05b989615d493b7ebd4d9f045fa5b88b4/tests/test_repositorio.py#L78))
+   y lanzando cada comando como un proceso separado
+   ([`tests/test_cli.py:124`](https://github.com/Carlos12n/reservas-lab/blob/0914d0b05b989615d493b7ebd4d9f045fa5b88b4/tests/test_cli.py#L124)).
+4. **Prueba que falla antes del código.** `PROGRESS.md` registra, tarea por
+   tarea, la falla real sin implementación (por ejemplo `ModuleNotFoundError:
+   No module named 'dominio'`) y el resultado después de implementar.
 
-1. **Prueba que falla antes del código.** En cada tarea se escribió primero
-   el archivo de pruebas y se lo corrió sin implementación. `PROGRESS.md`
-   registra cada falla real (por ejemplo `ModuleNotFoundError: No module
-   named 'dominio'`) y después el resultado real al implementar.
-2. **Caso consecutivo obligatorio.** Las pruebas de superposición incluyen
-   10:00-11:00 contra 11:00-12:00:
-   `test_r4_turnos_consecutivos_no_se_superponen` en
-   `tests/test_dominio.py`, `test_r4_turno_consecutivo_se_acepta` en
-   `tests/test_servicio.py` y en `tests/test_cli.py`.
-3. **`PROGRESS.md` al terminar cada tarea**, con comando y resultado real.
-4. **Tareas chicas:** una rama y un commit por tarea (`paso-0`,
-   `tarea-1` … `tarea-6`).
+### Conservación del progreso y las decisiones
+- [`PROGRESS.md`](https://github.com/Carlos12n/reservas-lab/blob/0914d0b05b989615d493b7ebd4d9f045fa5b88b4/PROGRESS.md),
+  versionado: qué se hizo en cada tarea, el comando ejecutado y su resultado
+  real. Solo se registraron comandos que se ejecutaron.
+- La sección 4 de este README, versionada: las decisiones, sus motivos y los
+  episodios de delegación.
+- El historial de git: un commit por tarea, en ramas `paso-0` y `tarea-1` a
+  `tarea-6`, fusionadas en `main`.
 
-### Cómo se conserva el progreso
-`PROGRESS.md` es el registro persistente: qué se hizo en cada tarea, el
-comando ejecutado y el resultado real. Junto con el historial de commits,
-permite retomar el trabajo en una sesión nueva sin depender de la memoria del
-agente (el contenedor de la sesión es temporal).
+El contenedor de la sesión es temporal. Estos archivos permiten retomar el
+trabajo sin depender de la memoria del agente.
 
 ## 4. Registro de decisiones y delegación
 

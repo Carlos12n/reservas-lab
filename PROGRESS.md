@@ -179,6 +179,18 @@ reservas-lab/
 - **Resultado real:** `80 passed in 0.69s`. `grep -c COMPLETAR README.md`
   devuelve 0.
 
+### Tarea 9 — Sección 3 del README según la consigna (2026-10-24)
+
+- **Qué se hizo:** se reescribió la sección 3 del README para cubrir cada punto
+  de la consigna: tabla de entorno con su fuente y los datos no visibles,
+  función del modelo y motivo de la elección (dado por el humano), extractos
+  saneados de la configuración externa (hook de cierre, clasificador de
+  permisos, acceso a GitHub) y cómo se aplicaron, controles previstos frente a
+  aplicados, qué se revisó antes de aceptar, y adaptaciones con enlaces fijos
+  al commit `0914d0b`. Las secciones 1, 2 y 4 no se modificaron.
+- **Comando ejecutado:** `python3 -m pytest -q`
+- **Resultado real:** `80 passed in 0.60s`.
+
 <!-- Plantilla para cada tarea:
 
 ### Tarea N — Título (AAAA-MM-DD)
