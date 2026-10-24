@@ -90,6 +90,30 @@ reservas-lab/
   `activa` y `cancelada`. La regla de superposición no está en SQL: sigue
   siendo solo la de `dominio.py`, que se aplicará en el servicio (tarea 4).
 
+### Tarea 4 — `servicio.py`: reservar, cancelar y disponibilidad (2026-10-24)
+
+- **Qué se hizo:** primero se escribió `tests/test_servicio.py` y se lo corrió
+  sin implementación. Después se creó `servicio.py` con la clase `Servicio`
+  (`unidades`, `listar`, `consultar_disponibilidad`, `reservar`, `cancelar`) y
+  el error `ErrorReserva` para superposición, reserva inexistente y reserva
+  ya cancelada. Reservar y consultar validan con el mismo método privado y
+  obtienen los bloqueos con el mismo método privado, que llama a
+  `dominio.conflictos`.
+- **Requisitos cubiertos:** R1 a R9 de punta a punta sobre una base temporal,
+  incluido el caso 10:00-11:00 contra 11:00-12:00 en reservar y en consultar.
+  R8 se verifica con un espía sobre `conflictos`: reservar y consultar lo
+  llaman. R9: tras reabrir, la activa sigue bloqueando y la cancelada no.
+- **Comando ejecutado (antes de implementar):** `python3 -m pytest`
+- **Resultado real:** `ModuleNotFoundError: No module named 'servicio'` —
+  `1 error in 0.11s` (falla esperada).
+- **Comando ejecutado (después de implementar):** `python3 -m pytest`
+- **Resultado real:** `65 passed in 0.21s` (41 anteriores + 24 nuevas).
+  Se comprobó con `ls data` que no se creó la base real.
+- **Pendientes / decisiones:** consultar disponibilidad devuelve la lista de
+  reservas que ocupan el intervalo (vacía = disponible), para poder mostrar
+  qué bloquea. Limitación: verificar e insertar no es atómico entre procesos;
+  es suficiente para una CLI de un solo usuario a la vez.
+
 <!-- Plantilla para cada tarea:
 
 ### Tarea N — Título (AAAA-MM-DD)
