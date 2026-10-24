@@ -179,6 +179,28 @@ reservas-lab/
 - **Resultado real:** `80 passed in 0.69s`. `grep -c COMPLETAR README.md`
   devuelve 0.
 
+### Demo — Ventana Tkinter, rama `demo-gui` (2026-10-24)
+
+- **Qué se hizo:** a pedido del humano, una ventana de demostración
+  (`gui_demo.py`) para probar el sistema de forma visual. **No es parte de la
+  entrega** (la interfaz gráfica está fuera de alcance) y la rama no se
+  fusiona en `main`. Usa el mismo `Servicio` que la CLI, así que aplica las
+  mismas reglas. Primero se escribió `tests/test_gui_demo.py` (8 pruebas, se
+  omiten si no hay Tkinter o pantalla).
+- **Entorno:** el contenedor no tenía Tkinter; con aprobación humana se
+  instaló `python3-tk` (disponible para Python 3.12) y se usó una pantalla
+  virtual (`xvfb-run`).
+- **Comando ejecutado (antes de implementar):**
+  `xvfb-run -a python3.12 -m pytest tests/test_gui_demo.py`
+- **Resultado real:** `ModuleNotFoundError: No module named 'gui_demo'`
+  (falla esperada).
+- **Comandos ejecutados (después de implementar):**
+  `xvfb-run -a python3.12 -m pytest` → `88 passed in 1.08s`;
+  `python3 -m pytest -q` (3.13, sin Tkinter) → `80 passed, 1 skipped`.
+- **Prueba visual:** se abrió la ventana en la pantalla virtual con reservas
+  de ejemplo y se tomó una captura: la superposición se rechaza con el
+  mensaje de error en rojo y la reserva cancelada aparece como `cancelada`.
+
 <!-- Plantilla para cada tarea:
 
 ### Tarea N — Título (AAAA-MM-DD)
