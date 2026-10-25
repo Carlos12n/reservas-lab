@@ -206,6 +206,18 @@ reservas-lab/
 - **Comando ejecutado (por el agente):** `python3 -m pytest -q`
 - **Resultado real:** `80 passed in 0.98s`.
 
+### Tarea 11 — Verificación humana de R3 y R4 (2026-10-25)
+
+- **Qué se hizo:** el humano, en `main` en su computadora, ejecutó con la
+  reserva #4 de MUL-01 (10:00-11:00) activa:
+  `cli.py reservar --unidad MUL-01 ... 10:30 ... 11:30` →
+  `Error: MUL-01 ya está reservada en ese horario (reserva 4)` (R3) y
+  `cli.py reservar --unidad MUL-01 ... 11:00 ... 12:00` →
+  `Reserva 6 creada: ... [activa]` (R4). Se registró en las secciones 3 y 4
+  del README.
+- **Comando ejecutado (por el agente):** `python3 -m pytest -q`
+- **Resultado real:** `80 passed in 1.19s`.
+
 <!-- Plantilla para cada tarea:
 
 ### Tarea N — Título (AAAA-MM-DD)
