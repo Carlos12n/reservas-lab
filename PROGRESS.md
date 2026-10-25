@@ -191,6 +191,21 @@ reservas-lab/
 - **Comando ejecutado:** `python3 -m pytest -q`
 - **Resultado real:** `80 passed in 0.60s`.
 
+### Tarea 10 — Registro de la verificación humana (2026-10-25)
+
+- **Qué se hizo:** el humano probó en su computadora (Windows) la ventana de
+  demostración de la rama `demo-gui` y compartió una captura: tres unidades
+  reservadas en el mismo horario (R5), la reserva #3 cancelada y conservada
+  (R7) y el mismo horario reservado de nuevo como #4 (R7). Después compartió
+  la salida de su terminal (Windows, Python 3.15.0, pytest 9.1.1, rama
+  `demo-gui`): `python -m pytest` → `88 passed in 4.51s`; `cli.py unidades`
+  mostró 5 unidades; `cli.py listar` mostró las reservas #1 a #4 creadas desde
+  la ventana (persistencia, R9); `cli.py reservar` creó la #5 activa. No probó
+  a mano superposición ni turno consecutivo. Se registró en las secciones 3 y
+  4 del README, sin atribuirle pruebas que no hizo.
+- **Comando ejecutado (por el agente):** `python3 -m pytest -q`
+- **Resultado real:** `80 passed in 0.98s`.
+
 <!-- Plantilla para cada tarea:
 
 ### Tarea N — Título (AAAA-MM-DD)
