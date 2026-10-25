@@ -309,8 +309,10 @@ push a `main`.
     distintas (R9);
   - `python cli.py reservar` creó la reserva #5 como `activa` (R2).
 
-  No probó a mano un caso de superposición ni de turno consecutivo; esos
-  casos quedan cubiertos por las pruebas automáticas que ejecutó.
+  - con la reserva #4 de MUL-01 (10:00-11:00) activa, `cli.py reservar` de
+    10:30 a 11:30 se rechazó con `Error: MUL-01 ya está reservada en ese
+    horario (reserva 4)` (R3), y de 11:00 a 12:00 se aceptó como reserva #6
+    (R4, turno consecutivo).
 - **Controles del agente antes de entregar cada resultado:**
   - pytest antes de implementar (falla esperada) y después (todas pasan), en
     cada tarea;
@@ -383,7 +385,7 @@ decisiones de los tres episodios (abajo) y no cambió ninguna.
 producida por el agente y no en una revisión independiente del código.
 Después, el humano verificó en su computadora: probó la ventana de
 demostración (R5, R7), ejecutó las pruebas automáticas (`88 passed`) y usó la
-CLI (R1, R2, R9). Detalle en la sección 3, "Qué se revisó antes de aceptar".
+CLI (R1, R2, R3, R4, R9). Detalle en la sección 3, "Qué se revisó antes de aceptar".
 No revisó el código.
 
 ### Episodios de delegación
