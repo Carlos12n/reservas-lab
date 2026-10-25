@@ -299,7 +299,18 @@ push a `main`.
     datos (R7);
   - después de cancelar, el mismo horario se puede volver a reservar (R7).
 
-  No ejecutó pytest ni la CLI, y no probó un caso de superposición.
+  Después, en la misma computadora (Windows, Python 3.15.0, pytest 9.1.1,
+  rama `demo-gui`):
+  - `python -m pytest` → `88 passed in 4.51s` (las 80 de la entrega y las 8
+    de la ventana);
+  - `python cli.py unidades` mostró las 5 unidades (R1);
+  - `python cli.py listar` mostró las reservas #1 a #4 creadas antes desde la
+    ventana, con sus estados: persistieron entre programas y ejecuciones
+    distintas (R9);
+  - `python cli.py reservar` creó la reserva #5 como `activa` (R2).
+
+  No probó a mano un caso de superposición ni de turno consecutivo; esos
+  casos quedan cubiertos por las pruebas automáticas que ejecutó.
 - **Controles del agente antes de entregar cada resultado:**
   - pytest antes de implementar (falla esperada) y después (todas pasan), en
     cada tarea;
@@ -370,9 +381,10 @@ decisiones de los tres episodios (abajo) y no cambió ninguna.
 
 **Limitación reconocida:** la validación humana se basó en la evidencia
 producida por el agente y no en una revisión independiente del código.
-Después, el humano probó en su computadora la ventana de demostración y
-comprobó R5 y R7 (detalle en la sección 3, "Qué se revisó antes de
-aceptar"). No revisó el código ni ejecutó las pruebas automáticas.
+Después, el humano verificó en su computadora: probó la ventana de
+demostración (R5, R7), ejecutó las pruebas automáticas (`88 passed`) y usó la
+CLI (R1, R2, R9). Detalle en la sección 3, "Qué se revisó antes de aceptar".
+No revisó el código.
 
 ### Episodios de delegación
 
