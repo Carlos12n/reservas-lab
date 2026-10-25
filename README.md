@@ -291,6 +291,15 @@ push a `main`.
   ejecutó las pruebas en su máquina** (declarado también en la sección 4). Al
   cerrar, revisó y confirmó las decisiones de los tres episodios respondiendo
   preguntas concretas.
+- **Verificación del humano en su computadora (2026-10-25):** después de la
+  entrega, el humano probó en Windows la ventana de demostración de la rama
+  `demo-gui`, que usa el mismo `servicio.py` que la CLI. Comprobó que:
+  - se aceptan tres unidades distintas en el mismo horario (R5);
+  - una reserva cancelada sigue en la lista como `cancelada`, con su ID y sus
+    datos (R7);
+  - después de cancelar, el mismo horario se puede volver a reservar (R7).
+
+  No ejecutó pytest ni la CLI, y no probó un caso de superposición.
 - **Controles del agente antes de entregar cada resultado:**
   - pytest antes de implementar (falla esperada) y después (todas pasan), en
     cada tarea;
@@ -361,6 +370,9 @@ decisiones de los tres episodios (abajo) y no cambió ninguna.
 
 **Limitación reconocida:** la validación humana se basó en la evidencia
 producida por el agente y no en una revisión independiente del código.
+Después, el humano probó en su computadora la ventana de demostración y
+comprobó R5 y R7 (detalle en la sección 3, "Qué se revisó antes de
+aceptar"). No revisó el código ni ejecutó las pruebas automáticas.
 
 ### Episodios de delegación
 
